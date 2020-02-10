@@ -49,7 +49,7 @@ let agents = [ethanHunt, jimPhelps, clairePhelps, eugeneKittridge, franzKrieger,
 
 //: ## Step 3
 //: Create a function that calculates the total number of compromised agents. Inside the function, iterate over the array of agents to determine which ones are compromised. Return the total count.
-func compromisedCount(_ agents: [Agent]) -> Int {
+func compromisedCount(_ agents: [(coverName: String, realName: String, accessLevel: Int, compromised: Bool)]) -> Int {
     var count = 0
     for agent in agents {
         if agent.compromised {
@@ -135,7 +135,7 @@ reportLevelTotals(agents)
 //: Create and call a function that prints the cover names and access levels of all agents, but the list should be sorted by access level, in ascending order.
 // This is made super easy by swift's sorted function. It take a closure as an argument that compares two parameters and returns a bool. I'm simply using the automatic $0 and $1 shorthand parameter names and comparing them and using implicit return to simplify the closure. Then I just iterate over the array using forEach which performs a closure passed in on each of the agents, printing their cover name and access level. This is a very functional way of doing things and leads to being able to print the agents sorted by access level in one line of code.
 
-
+print("\n--- Sorted Agents ---\n")
 func printSortedCoverNames(_ agents: [Agent]) {
     agents.sorted { $0.accessLevel < $1.accessLevel }.forEach { print("\($0.coverName), level: \($0.accessLevel)") }
 }
@@ -155,6 +155,51 @@ printSortedCoverNames(agents)
 //
 //printSortedCoverNames(agents)
 
-// Now let's pretend that swift didn't have a sorted function. That would mean that we would have to implement our own sort algorithm:
+// Now let's pretend that swift didn't have a sorted function. That would mean that we would have to implement our own sort algorithm.
+// This is my first time working with quick sort and I see there are a few ways of doing it, still working on wrapping my head around it
+// My quick sort may not be so "quick", lol
 
+extension Array {
+    func quickSorted(by predicate: (Element, Element) -> Bool) -> [Element] {
+        
+        func quicksort(_ array: inout [Element], low: Int, high: Int) {
+            // check for base case
+            guard low < high else { return }
+            
+            // partition
+            let p = partition(&array, low: low, high: high)
+            
+            quicksort(&array, low: low, high: p)
+            quicksort(&array, low: p + 1, high: high)
+        }
 
+        func partition(_ array: inout[Element], low: Int, high: Int) -> Int {
+            let pivot = array[low]
+            var i = low - 1
+            var j = high + 1
+
+            while true {
+                repeat { j -= 1 } while predicate(pivot, array[j])
+                repeat { i += 1 } while predicate(array[i], pivot)
+
+              if i < j {
+                array.swapAt(i, j)
+              } else {
+                return j
+              }
+                
+            }
+        }
+        
+        var result = self
+        quicksort(&result, low: 0, high: self.count - 1)
+        return result
+    }
+}
+
+func printQuickSortedCoverNames(_ agents: [Agent]) {
+    agents.quickSorted(by: { $0.accessLevel < $1.accessLevel }).forEach { print("\($0.coverName), level: \($0.accessLevel)") }
+}
+
+print("\n--- Quicksorted Agents ---\n")
+printQuickSortedCoverNames(agents)
